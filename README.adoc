@@ -10,13 +10,13 @@
 - 이 개발가이드는 react-redux-starter-kit을 기반하여 작성이 되었으며 다양한 새로운 프론트 기술들을 실행하고 배울수 있도록 디자인 되었다. 설정과 Webapack 빌드 시스템과 핫 리로딩, CSS 모듈과 Sass지원, 유닛테스팅, 코드 커버리지 레포트, 번들링등을 제공한다. 이 프로젝트의 가장 주요한 목적은 이런 프로젝트 구조를 반드시 따르라거나 완벽한 샘플 어플리케이션을 데모하려하는 것이 아니라  가능한 한 유연한 구조로 남아 있는것이다. 이 프로젝트에서는  프론트 앤드 개발을 쉽고 유연하고 즐겁게 할 수 있는 여러 툴들을 제공한다.
 
 = Redux 개발가이드
-include::./doc/dev-redux-guide.ad[redux 개발 가이드]
+include::./doc/dev-redux-guide.adoc[redux 개발 가이드]
 
 = 공통기능 사용가이드
-include::./doc/dev-common-features-guide.ad[공통기능 개발 가이드]
+include::./doc/dev-common-features-guide.adoc[공통기능 개발 가이드]
 
 = 개발시 유용한 팁
-include::./doc/dev-tips.ad[개발시 유용한 팁]
+include::./doc/dev-tips.adoc[개발시 유용한 팁]
 
 == 구성요소
 * [react](https://github.com/facebook/react)

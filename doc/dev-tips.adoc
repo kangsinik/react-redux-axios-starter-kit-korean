@@ -1,4 +1,4 @@
-= Plumber 개발 시 유용한 팁
+= react-redux-axios-stater-kit-korean 개발 시 유용한 팁
 :toc:
 :toclevels: 3
 
