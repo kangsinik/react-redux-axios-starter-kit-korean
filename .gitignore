@@ -1,0 +1,9 @@
+.DS_STORE
+*.log
+node_modules
+screenshot
+dist
+coverage
+*chromedriver.exe
+*chromedriver_win32.zip
+*env.js

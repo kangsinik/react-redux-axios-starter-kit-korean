@@ -1,0 +1,7 @@
+export const DEFAULT_REG_MSG = 'Please check your input format'
+export const MAX_LENGTH_255_MSG = 'max length 255'
+export const ALPHA_DIGIT_SOME_SPECIAL_CHA_MSG = 'alphabet, digit or some characters such as "-_()./".'
+export const INPUT_VALID_URL ='Please input a valid URL'
+export const ALPHA_DIGIT_UNDERBAR_REG_MSG = 'alphabet, digit or underbar'
+export const ALPHA_DIGIT_BAR_UNDERBAR_DOT_REG_MSG = 'alphabet, digit or some characters such as "- _ ."'
+export const UPPER_ALPHA_DIGIT_REG_MSG = 'upper case alphabet and digit'

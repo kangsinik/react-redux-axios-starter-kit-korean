@@ -1,0 +1,311 @@
+= react-redux-axios-stater-kit-korean 개발 가이드
+:toc:
+:toclevels: 4
+
+이 문서에서는 프론트 엔드 및 서버 사이드 개발자가 react-redux-axios-stater-kit-korean 프로젝트를 이용하여 화면을 개발할 때 실제로 수정하거나 추가할 부분에 대해서만 다룹니다. 더 상세한 내용을 보고 싶으신 분들은 개발환경 가이드를 통해서 제공된 레퍼런스를 통해서 학습을 해주시기 바랍니다.
+
+== 프로젝트-구조
+
+소스는 크게 뷰를 담당하는 React 컴포넌트를 다루는 src/component 폴더와 Redux 구현체를 담고 있는 src/routes 그리고 각 컴포넌트에서 사용할 상수를 정의하는 src/constants로 구분이 되어집니다. 아래에서 볼 수 있듯이 routes 폴더에는 라우팅이 되는 화면별로 폴더가 만들어져 있습니다. routes와 마찬가지로 src/components 역시 화면별로 구분이 되어지고 경우에 따라서 화면에서 공유가 되어지는 컴포넌트 같은 경우에는 common 폴더 추가를 하도록 합니다.
+
+[source,text,indent=0]
+----
+└── src                       		       # 어플리케이션 소스코드
+ ├─ components         	 # 재사용 가능한 선언적 컴포넌트들, UI 컴포넌트가 들어갈 곳
+ ├─ constants          	 # 어플리케이션 전역에서 사용하는 상수를 선언한 곳.
+ └─ routes             	 # 라우트 정의및 비동기 분리 부분을 담당하는 폴더
+     ├── index.js     	# 스토어와 연동해서 라우팅을 하는 메인 어플리케이션, 새롭게 라우트를 추가 가능한 컴포넌트
+     └── Sample         # Fractal 라우팅
+       ├── index.js     # 라우팅 정의와 비동기 분기 포인트
+       ├── assets       # 컴포넌트들에 필요한 에셋들
+       ├── actions  	  # 컴포넌트의 액션을 정의하는 스크립트 폴더
+       ├── containers   # 리액트컴포넌트와 액션, 상태를 연결하는 영민한 컴포넌트 폴더(Smart Component)
+       └── reducers     # 리듀서 폴더
+	       ├── index.js   # 복수개의 리듀서를 하나의 리듀서로 합치는 리듀서 인덱스 파일
+	       └── Samples.js # Sample 컴포넌트의 상태를 관리하는 리듀서 파일
+----
+
+== Thinking in Redux!
+
+같이 첨부된 개발 환경 문서에서 설명한 것과 같이 MVC 패턴이 아닌 FLUX 아키텍처를 구현한 Redux를 기반으로 프론트 엔드 어플리케이션을 구현합니다. 다시 한번 강조하지만 React (view) != Redux (framework) 아래의 순서대로 따라해 봅시다.
+
+=== 액션 (Action) 정의하기
+액션은 평범한 자바스크립트 객체입니다. 액션은 반드시 어떤 형태의 액션이 실행될지 나타내는 type 속성을 가져야 합니다. 타입은 일반적으로 문자열 상수로 정의됩니다.
+
+[source,javascript,indent=0]
+----
+{
+  type: SAMPLE_INCREMENT,
+  value: 1
+}
+----
+
+다음은 severs라는 배열과 함께 'FETCH_SERVER_INFO' 라는 액션 타입 객체를 리턴하는 예입니다.
+
+[source,javascript,indent=0]
+----
+{
+  type: types.FETCH_SERVER_INFO,
+  payload: servers
+}
+----
+
+=== 액션 생성자 ( Action Creator ) 만들기
+액션을 정의했다면 이제 실제로 액션을 어떻게 만들 것인지를 정의해야 합니다. 액션 생산자는 액션을 만드는 함수입니다. "액션"과 "액션 생산자"는 혼용하기 쉬운 용어이니 적절하게 사용하도록 신경써야 합니다. 아래의 소스를 봅니다.
+
+NOTE: *보일러플레이트에 대한 설명* : 액션 타입 상수를 반드시 별도의 파일에 정의할 필요는 없으며, 심지어 정의하지 않아도 됩니다. 작은 프로젝트에서는 액션 타입으로 그냥 문자열을 쓰는게 쉬울겁니다. 하지만 코드베이스가 커지면 상수를 정의해서 얻을 수 있는 장점이 있습니다. 코드베이스를 깨끗하게 유지하기 위한 실용적인 팁들을 보일러플레이트 줄이기에서 더 읽을 수 있습니다. http://dobbit.github.io/redux/docs_kr/recipes/ReducingBoilerplate.html[보일러플레이트-줄이기]
+
+.src/constants/ActionTypes.js - 액션 타입을 위한 상수
+[source,javascript,indent=0]
+----
+export const SAMPLE_INCREMENT = 'SAMPLE_INCREMENT'
+export const FETCH_SERVER_INFO = 'FETCH_SERVER_INFO'
+
+... 생략
+----
+
+.src/routes/Sample/actions/index.js - 'SAMPLE_INCREMENT' 액션 생산자
+[source,javascript,indent=0]
+----
+import * as types from 'constants/ActionTypes'
+// 액션타입을 정의한 상수를 참조합니다.
+export function incrementSample (value = 1) {
+  return {
+    type: types.SAMPLE_INCREMENT,
+    payload: value
+  }
+}
+----
+
+.src/routes/TableTest/actions/index.js = 'FETCH_SERVER_INFO' 액션 생산자.
+[source,javascript,indent=0]
+----
+function receiveData (data) {
+  let servers = []
+  servers.push(data)
+  return {
+    type: types.FETCH_SERVER_INFO,
+    payload: servers
+  }
+}
+----
+
+=== 리듀서 ( Reducer ) 만들기
+액션은 무언가 일어난다는 사실을 기술하지만, 그 결과 애플리케이션의 상태가 어떻게 바뀌는지는 특정하지 않습니다. 이것은 리듀서가 처리합니다. 다음의 소스를 봅니다.
+
+[source,javascript,indent=0]
+.src/routes/Sample/reducers/sample.js
+----
+import * as types from 'constants/ActionTypes'
+
+const ACTION_HANDLERS = {
+  [types.SAMPLE_INCREMENT]: (state, action) => state + action.payload
+}
+
+const initialState = 0
+export default function sample (state = initialState, action) {
+  const handler = ACTION_HANDLERS[action.type]
+  return handler ? handler(state, action) : state
+}
+----
+샘플예제에서 정의하고 있는 initialState를 주목합니다. 이 예제에서 객체는 단순한 숫자 객체입니다. 다음의 다른 예제를 보도록 합니다.
+
+[source,javascript,indent=0]
+.src/routes/TableTest/reducers/tableTest.js
+----
+import * as types from 'constants/ActionTypes'
+// 해당 부분의 source를 보면 기존의 state를 수정하는 것 처럼 보이지만 ../store/reducers.js 파일에서 'react-router-redux' 에서 제공된 combineReducers로 리듀서들을 추가하고 있습니다. 즉 여기서 리턴되는 값들은 이미 기존의 새로운 객체에 복사된 state를 수정하고 있다고 이해하면 됩니다.
+export default function nodes (state = [], action) {
+  switch (action.type) {
+    case types.FETCH_SERVER_INFO:
+      return action.payload
+    default:
+      return state
+  }
+}
+----
+
+위의 리듀서에서는 초기 상태는 '[]' 와 같이 배열로 정의되었습니다. action.payload는 앞에서 액션에 정의한 servers 배열이 리턴됩니다.
+
+=== React 컴포넌트와 함께 사용하기
+처음 시작할때부터 우리는 Redux가 React와는 관계가 없음을 강조했습니다. 여러분은 Redux 앱을 React, Angular, Ember, jQuery, 순수 JavaScript와 함께 만들 수 있습니다. 그렇긴 하지만 Redux는 액션에 반응하여 상태를 변경하기 때문에, React나 D같이 UI를 상태에 대한 함수로 기술하는 프레임워크와 특히 잘 어울립니다. 이제 React UI 컴포넌트와 Redux를 연결해보도록 합시다. 아래의 소스를 봅니다.
+
+[source,javascript,indent=0]
+./src/routes/Sample/containers/SampleContainer.js
+----
+import { connect } from 'react-redux'
+import { incrementSample, doubleAsyncSample } from '../actions'
+
+import Sample from 'components/Sample'
+
+const mapActionCreators = {
+  incrementSample: () => incrementSample(1),
+  doubleAsyncSample
+}
+const mapStateToProps = (state) => ({
+  sample: state.sample // 뒤에 전역 store에 등록될 reducer의 키와 반드시 일치해야합니다!
+})
+// connect 전역 redux store의 상태를 받아서 컴포넌트가 필요로 하는 props를 반환.
+// root reducer에서 필요한 state 와 함수형 PROPS를 App 컴포넌트에 제공하고 dispatch를 전역변수로 (prop) 제공!
+export default connect(
+  /* mapStateToProps(state, [ownProps]):
+  (Function) 전역  Redux store 의 state 를 컴포넌트의 props 에 매핑.  ownProps
+  인수가 명시될 경우, 이를 통해 함수 내부에서 컴포넌트의 props 값에 접근가능 */
+  mapStateToProps,
+   /* mapDispatchToProps(dispatch, [ownProps]):
+  (Function or Object)  컴포넌트의 특정 함수형 props 를 실행 했을 때, 개발자가
+  지정한 action을 dispatch 하도록 설정. ownProps의 용도는 위 인수와 동일 */
+  mapActionCreators
+)(Sample)
+----
+
+위와 같이 작성하면 앞에서 작성한 action 'Sample' 컴포넌트에 props에 함수로 제공하고 'sample' 이라는 키로 전역 스토어에 등록된 리듀서에서 반환하는 값들을 props로 제공합니다.
+
+=== 스토어 (Store) 만들기
+이전 섹션에서 우리는 "무엇이 일어날지"를 나타내는 액션과 이 액션에 따라 상태를 수정하는 리듀서를 정의하고 React UI 컴포넌트에 액션과 리듀서를 매핑했습니다. 스토어는 이들을 함께 가져오는 객체입니다. 스토어는 아래와 같은 일들을 해야 합니다.
+
+- 애플리케이션의 상태를 저장하고
+- getState()를 통해 상태에 접근하게 하고
+- subscribe(listener)를 통해 리스너를 등록합니다.
+
+Redux 애플리케이션에서 단 하나의 스토어만 가질 수 있음을 알아두는것이 중요합니다. 만약 데이터를 다루는 로직을 쪼개고 싶다면, 여러개의 스토어 대신 리듀서 조합을 사용할 수 있습니다. 이 프로젝트에서는 화면 단위로 리듀서를 만들어 스토어에 등록해서 사용합니다. 라우팅이 될 때 화면별 리듀서를 동적으로 생성하도록 합니다. 아래의 순서에 따라 작업을 합니다.
+
+==== 전역 라우터에 화면별 라우팅 컴포넌트 추가하기
+
+[source,javascript,indent=0]
+./src/routes/index.js
+----
+import CoreLayout from '../layouts/CoreLayout/CoreLayout'
+import Home from './Home'
+import CounterRoute from './Counter'
+import SampleRoute from './Sample'
+import TableTestRoute from './TableTest'
+
+export const createRoutes = (store) => ({
+  path: '/',
+  component: CoreLayout,
+  indexRoute: Home,
+  childRoutes: [
+    CounterRoute(store),
+    SampleRoute(store),
+    TableTestRoute(store)
+    // 여기에 라우터를 추가합니다.
+  ]
+})
+
+export default createRoutes
+----
+
+==== Reducer를 동적으로 생성하기
+어플리케이션 전체에서 동작하는 라우터에 개별 컴포넌트용 라우터를 추가했다면 이제 루트 리듀서에 화면별 리듀서를 동적으로 추가하는 코드를 작성합니다.
+
+[source,javascript,indent=0]
+./src/routes/Sample/index.js
+----
+import { injectReducer } from '../../store/reducers'
+
+export default (store) => ({
+  path: 'sample',
+  /*  route가 호출됐을 때만 호출됩니다.  */
+  getComponent (nextState, cb) {
+    require.ensure([], (require) => {
+      /*action과 state를 React 컴포넌트에 넘겨주도록 매핑하는 부분입니다. */
+      const Sample = require('./containers/SampleContainer').default
+      const reducer = require('./reducers').default
+      /*  스토어에 'sample' 이라는 키로 reducer를 등록합니다.  */
+      injectReducer(store, { key: 'sample', reducer })
+      /*  getComponent 함수를 리턴합니다.   */
+      cb(null, Sample)
+    /* Webpack named bundle   */
+    }, 'sample') //
+  }
+})
+----
+
+여기까지 작성을 하면 실제로 '/sample' 로 접근할 떄 위의 컴포넌트가 호출되서 어플리케이션 루트 리듀서에 하위에 'sample'이라는 키로 리듀서가 등록이 됩니다. 더 상세한 부분을 확인하고 싶다면 다음의 소스를 참조합니다.
+
+- /src/main.js // 실제로 createStore를 호출하는 부분 로직이 있는 소스
+- /src/store/createStore.js // makeRootReducer를 호출해서 리듀서를 생성하는 로직이 있는소스
+- /src/store/reducers.js // 동적으로 리듀서를 받아서 생성하는 부분
+
+=== React 컴포넌트 작성하기
+자 이제 React 컴포넌트에 데이터를 넘길 모든 준비가 끝났습니다. View -> Action -> Action Creator -> Reducer -> Store -> View 의 흐름으로 데이터가 흐릅니다. 이제 뷰를 작성해보도록 합시다.
+
+[source,javascript,indent=0]
+./src/routes/Sample/index.js
+----
+import React, { Component } from 'react'
+import classes from './Sample.scss'
+
+export class Sample extends Component {
+  render () {
+    const { sample } = this.props
+    return (
+      <div>
+        <h2 className={classes.sampleContainer}>
+          Sample:
+          {' '}
+          <span className={classes['sample--green']}>
+            {sample.sample}
+          </span>
+        </h2>
+        <button className='btn btn-default' onClick={this.props.incrementSample}>
+          Increment
+        </button>
+        {' '}
+        <button className='btn btn-default' onClick={this.props.doubleAsyncSample}>
+          Double (Async)
+        </button>
+      </div>
+    )
+  }
+}
+
+Sample.propTypes = {
+  sample: React.PropTypes.object.isRequired,
+  doubleAsyncSample: React.PropTypes.func.isRequired,
+  incrementSample: React.PropTypes.func.isRequired
+}
+export default Sample
+----
+라우터의 하위 컴포넌트인 Sample 컴포넌트는 this.props 키워드를 통해 전역 Store의 'sample' 접근하여 필요한 state와 action을 불러서 쓰기만 하면 됩니다. 항상 화면을 그리기전에 화면에서 어떤 state를 표현을 할지 action을 통해서 설계를 하는 과정을 거치는 연습이 필요합니다. 데이터의 흐름을 파악하고 나면 그 순서에 따라서 작성을 하는 것은 그리 어렵지 않습니다. 마지막으로 부록에서는 서버와 통신을 위한 rest api 호출 예제를 다룹니다.
+
+=== REST API 호출부분 만들기 (optional)
+rest api를 호출하기 위해서 다양한 컴포넌트를 사용할 수 있는데 react-redux-axios-stater-kit-korean 프로젝트에서는 promise를 지원하는 axios를 사용합니다. 아래의 소스를 확인해보도록 합니다.
+
+[source,javascript,indent=0]
+.src/routes/TableTest/actions/index.js
+----
+import * as types from 'constants/ActionTypes'
+import axios from 'axios'
+
+const serverUrl = 'http://localhost:9000'
+
+function receiveData (data) {
+  let servers = []
+  servers.push(data)
+  return {
+    type: types.FETCH_SERVER_INFO,
+    payload: servers
+  }
+}
+
+export function fetchServerInfo (servers = []) {
+
+  return function (dispatch) {
+    return axios.get(serverUrl + '/nodes/PROJECT')
+    .then(function (response) {
+      dispatch(receiveData(response.data))
+    })
+    .catch(function (response) {
+      console.log('response: ', response)
+    })
+  }
+}
+
+export const actions = {
+  fetchServerInfo
+}
+----
+
+rest api를 호출함에 있어서 가장 주의해야할 부분은 action에서 직접 DB에 접근을 한다던지의 비동기 액션을 수행해서는 안된다는 것입니다. 반드시 CALL BACK FUNCTION을 리턴함으로서 실제로는 UI 컴포넌트에서 store로 action을 dispatch하도록 합니다. 다시 말하자면  DB를 제어하는 부분의 액션은 UI 컴포넌트 라이프 사이클 안에서 이루어져야 합니다.

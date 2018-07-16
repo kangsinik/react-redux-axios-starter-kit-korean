@@ -1,0 +1,29 @@
+tool : https://theintern.github.io/
+
+get chrome driver: http://chromedriver.storage.googleapis.com/index.html?path=2.24/
+
+install:
+npm install --save-dev intern
+
+
+samples:
+https://github.com/theintern/intern-examples
+
+userguide:
+https://theintern.github.io/intern/#what-is-intern
+
+command reference:
+https://theintern.github.io/leadfoot/module-leadfoot_Command.html
+
+execute :
+
+
+1. run chromedriver-run.cmd
+2. make 'screenshot' folder on root folder
+3. run command below
+node_modules\.bin\intern-runner config=tests\intern
+
+capture configuration:
+edit consts.js
+  set capture: true
+  set capturePath: 'screenshot' // from project root

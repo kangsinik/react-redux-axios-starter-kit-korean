@@ -1,0 +1,176 @@
+== UI Test Intern
+=== 설치
+
+- tool : https://theintern.github.io/
+
+- get chrome driver : http://chromedriver.storage.googleapis.com/index.html?path=2.24/
+
+- install : npm install --save-dev intern
+
+- samples : https://github.com/theintern/intern-examples
+
+- userguide : https://theintern.github.io/intern/#what-is-intern
+
+- command reference : https://theintern.github.io/leadfoot/module-leadfoot_Command.html
+
+=== 실행
+
+1. chromedriver.exe 파일을 $react-redux-axios-stater-kit-korean\tests\functional\chromedriver_win32 폴더 아래에 복사
+2. run chromedriver-run.cmd
+3. \$react-redux-axios-stater-kit-korean 폴더 아래에 'screenshot' 폴더 생성
+4. 테스트 실행 : node_modules\.bin\intern-runner config=tests\intern
+
+
+=== 테스트케이스 작성법
+- 테스트 단위 : 기능별
+
+- js파일 명명규칙 : 기능단위.js (예 : 로그인 - login.js, 메타데이터CRUD - metadata.js ......)
+
+- $react-redux-axios-stater-kit-korean\tests\functional 폴더 아래 새로운 .js파일 생성
+
+- $react-redux-axios-stater-kit-korean\tests 폴더의 intern.js에 새로 만든 파일을 functionalSuites에 추가
+
+[source, javascript]
+----
+functionalSuites: [
+  'tests/functional/login',
+  'tests/functional/sampleView'
+]
+----
+
+- **.js 에 테스트 구현
+
+[source, javascript]
+----
+
+define([
+	'intern!object',
+	'intern/chai!assert',
+	'./consts'
+], function (registerSuite, assert, consts) {
+    registerSuite({
+      name: 'SAMPLE',
+      '파일명': function () {
+        return this.remote
+          .get(consts.url).setFindTimeout(5000)
+
+          ...
+          ...
+          ..
+
+    })
+})
+
+----
+
+- xPath
+[source, javascript]
+----
+.findByXpath("//a[@href='#/sampleView']")
+----
+
+- findById
+[source, javascript]
+----
+.findById('id')
+----
+
+- findByName
+[source, javascript]
+----
+.findByName('name')
+----
+
+- screenShot
+[source, javascript]
+----
+.takeScreenshot().then(function (buffer) { consts.takeCapture('저장될 파일명', buffer) })
+----
+
+- findByTagName
+[source, javascript]
+----
+.findByTagName('h3')
+----
+
+- input 데이터 입력
+[source, javascript]
+----
+.findByName('name').click().type('inputText').end()
+----
+-> name이 'name'인 element를 찾아 'inputText'를 입력
+
+- 텍스트 일치 확인
+[source, javascript]
+----
+findById('id').getVisibleText()
+.then(function (text) {
+  assert.strictEqual(text, 'exampleText')
+})
+----
+
+- 예제
+
+[source, javascript]
+----
+define([
+	'intern!object',
+	'intern/chai!assert',
+	'./consts'
+], function (registerSuite, assert, consts) {
+
+	var pipelineName = 'Auto_test_pipeline_name_5';
+
+	var XPATH_SUBMIT_BUTTON = "//button[@type='submit']";
+
+    registerSuite({
+      name: 'EPS',
+      'pipeline': function () {
+				return this.remote
+					.get(consts.url).setFindTimeout(5000)
+
+					.findByXpath("//a[@href='#/pipelineView']")
+						.click()
+						.end()
+					.sleep(2000)
+
+// Pipeline List
+				.takeScreenshot().then(function (buffer) { consts.takeCapture('pipeline-01-list', buffer) })
+				.end()
+
+// Move Pipeline Create
+				.findById('pipeline_add_button').click().end()
+
+// Pipeline Info.
+				.findById('selectDeployTypeBtn').click().end().sleep(500)
+				.takeScreenshot().then(function (buffer) { consts.takeCapture('pipeline-go-create', buffer) })
+				.findByName('name').click().type(pipelineName).end().sleep(500)
+				.findByName('nodeId').click().end().sleep(500)
+				.findById('nodeId_JENKINS_9120').click().end().sleep(500)
+				.findByName('configGitlabId').click().end().sleep(500)
+				.findById('configGitlabId_GitlabMeta').click().end().sleep(500)
+				.findByName('configGitlabBranchName').click().type('test2').end().sleep(500)
+				.takeScreenshot().then(function (buffer) { consts.takeCapture('pipeline-02-regist', buffer) })
+				.findById('next_0').click().end().sleep(500)
+				.end()
+
+// submit
+				.findById('finalSubmit').click().end().sleep(500)
+				.findById('confirmYes').click().end().sleep(500)
+
+				.findByXpath("//td[text()='" + pipelineName + "']")
+				.getVisibleText()
+				.then(function (text) {
+					assert.strictEqual(text, pipelineName)
+				})
+				.sleep(2000)
+				.takeScreenshot().then(function (buffer) { consts.takeCapture('pipeline-06-regist', buffer) })
+			}
+    })
+})
+
+----
+
+- 팁
+1. sleep(500) 등을 주는 이유는 화면 전환이나 버튼 클릭 등의 이벤트 발생 시 실행속도가 환경마다 모두 다르기 때문에, 로딩이 되지 않은 채 실행되는 것을 방지하기 위함
+2. 사람이 직접 테스트 하는 흐름 순서대로 작성해 나감

@@ -1,0 +1,166 @@
+= react-redux-axios-stater-kit-korean 공통기능 가이드
+:toc:
+:toclevels: 4
+
+
+== 1. Notification
+=== 사용법
+1. 상단에 SnackBar import
+- import SnackBar from 'node-snackbar'
+2. 알림을 띄우자 하는 부분에서 호출
+- SnackBar.show({text: 알림 메세지, pos: 위치, actionText: 액션버튼 Text})
+
+3. 위치
+top-left, top-center, top-right
+bottom-left, bottom-center, bottom-right
+
+4. Action 버튼 기능
+- No Action
+[source, javascript]
+----
+SnackBar.show({ showAction: false, })
+----
+
+- Action Text
+[source, javascript]
+----
+SnackBar.show({ actionText: 'Thanks!', })
+----
+
+- Text Color
+[source, javascript]
+----
+SnackBar.show({ actionTextColor: '#ff0000', });
+----
+
+- Click Callback
+[source, javascript]
+----
+SnackBar.show({
+   text: 'I have a custom callback when action button is clicked.',
+   width: '475px',
+   onActionClick: function(element) {
+       //Set opacity of element to 0 to close Snackbar
+       $(element).css('opacity', 0);
+       alert('Clicked Called!');
+   }
+})
+----
+
+eg)
+[source, javascript]
+----
+import SnackBar from 'node-snackbar'
+
+export function createPipeline (textObject, projectId) {
+  return function (dispatch) {
+    dispatch(rotateLoadingCircle())
+    return axios.post(serverUrl + '/api/pipelines', textObject)
+    .then(function (response) {
+      SnackBar.show({text: 'Pipeline has been created', pos: 'bottom-center', actionText: 'Close'})
+      dispatch(stopLoadingCircle())
+      dispatch(push('/sampleView'))
+    })
+    .catch(function (response) {
+      dispatch(stopLoadingCircle())
+      dispatch(push('/errorPage?status=' + response.status + '&statusText=' + response.statusText))
+    })
+  }
+}
+----
+
+== 2. Confirm Dialog
+=== 사용법
+
+**Container.js에 추가
+[source, javascript]
+----
+import { openConfirmDialog, closeConfirmDialog } from 'routes/Common/ConfirmDialog/actions'
+
+const mapActionCreators = {
+  openConfirmDialog,
+  closeConfirmDialog
+}
+----
+
+view의 propTypes 에 추가
+[source, javascript]
+----
+openConfirmDialog: React.PropTypes.func.isRequired,
+closeConfirmDialog: React.PropTypes.func.isRequired,
+----
+
+사용할 View에서 다이얼로그 호출
+[source, javascript]
+----
+handleConfirmDialog (data) {
+  const submitOption = {                                                      <1>
+    onSubmit: () => this.submitForm(data) // 확인 버튼
+  }
+
+  this.props.openConfirmDialog('Do you want to register?', submitOption)      <2>
+}
+----
+
+<1> Confirm창에서 확인 버튼을 클릭했을 때 다음 동작으로 this.submitForm(data) 실행
+<2> openConfirmDialog(Confirm Message, callback함수)
+
+
+== 3. Error Page
+=== 사용법
+/errorPage 로 Routing 하며 파라미터로 status, statusText를 보냄
+
+dispatch(push('/errorPage?status=' + response.status + '&statusText=' + response.statusText))
+
+eg)
+[source, javascript]
+----
+export function createPipeline (textObject, projectId) {
+  return function (dispatch) {
+    dispatch(rotateLoadingCircle())
+    return axios.post(serverUrl + '/api/pipelines', textObject)
+    .then(function (response) {
+      SnackBar.show({text: 'Pipeline has been created', pos: 'bottom-center', actionText: 'Close'})
+      dispatch(stopLoadingCircle())
+      dispatch(push('/sampleView'))
+    })
+    .catch(function (response) {
+      dispatch(stopLoadingCircle())
+      dispatch(push('/errorPage?status=' + response.status + '&statusText=' + response.statusText))
+    })
+  }
+}
+----
+
+
+== 4. Loading Bar (Spinner)
+=== 사용법
+
+1. Action 상단에 LoadingCircle import
+- import { rotateLoadingCircle, stopLoadingCircle } from '../../LoadingCircle/actions'
+
+2. Action에서 ajax호출하는 부분에 작성
+- loading bar 실행 : dispatch(rotateLoadingCircle())
+- loading bar 중지 : dispatch(stopLoadingCircle())
+
+eg)
+[source, javascript]
+----
+import { rotateLoadingCircle, stopLoadingCircle } from '../../LoadingCircle/actions'
+
+export function createPipeline (textObject, projectId) {
+  return function (dispatch) {
+    dispatch(rotateLoadingCircle())
+    return axios.post(serverUrl + '/api/pipelines', textObject)
+    .then(function (response) {
+      SnackBar.show({text: 'Pipeline has been created', pos: 'bottom-center', actionText: 'Close'})
+      dispatch(stopLoadingCircle())
+      dispatch(push('/sampleView'))
+    })
+    .catch(function (response) {
+      dispatch(stopLoadingCircle())
+      dispatch(push('/errorPage?status=' + response.status + '&statusText=' + response.statusText))
+    })
+  }
+}
+----
